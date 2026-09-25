@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compliant Records | 21 CFR Part 11 Electronic Records</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ==================== LOGIN VIEW (Visible when not authenticated) ==================== -->
+  <div id="loginView" class="login-container">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="brand-logo-lg">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <h1 class="login-title">Compliant Records</h1>
+        <p class="login-subtitle">21 CFR Part 11 Electronic Batch Records & Audit Trail</p>
+      </div>
+
+      <div class="compliance-pill-center">
+        <span class="badge-pill">ALCOA+ Validated</span>
+        <span>Secure Identity & Role-Based Access Control</span>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="login-form">
+        <div id="loginErrorMessage" class="form-error" style="display: none;"></div>
+
+        <div class="form-group">
+          <label for="loginEmail">Email Address <span class="required">*</span></label>
+          <input type="email" id="loginEmail" placeholder="e.g. operator@pharma.local" required autocomplete="username" />
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Password <span class="required">*</span></label>
+          <input type="password" id="loginPassword" placeholder="Enter your password..." required autocomplete="current-password" />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="btnLoginSubmit">
+          <span>Sign In to System</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </form>
+
+      <!-- Demo Persona Quick-Fill Cards -->
+      <div class="demo-credentials-section">
+        <div class="demo-section-label">
+          <span>Quick Autofill by Role (For Interview / Demo):</span>
+        </div>
+        <div class="persona-chips">
+          <button type="button" class="persona-chip chip-operator" onclick="autofillCredentials('operator')">
+            <div class="chip-dot"></div>
+            <div class="chip-info">
+              <div class="chip-role">OPERATOR</div>
+              <div class="chip-name">Jessica Lin</div>
+              <div class="chip-desc">Create & Edit Draft Records</div>
+            </div>
+          </button>
+
+          <button type="button" class="persona-chip chip-reviewer" onclick="autofillCredentials('reviewer')">
+            <div class="chip-dot"></div>
+            <div class="chip-info">
+              <div class="chip-role">REVIEWER</div>
+              <div class="chip-name">Marcus Sterling</div>
+              <div class="chip-desc">Sign & Lock Batch Records</div>
+            </div>
+          </button>
+
+          <button type="button" class="persona-chip chip-admin" onclick="autofillCredentials('admin')">
+            <div class="chip-dot"></div>
+            <div class="chip-info">
+              <div class="chip-role">ADMIN</div>
+              <div class="chip-name">Dr. Eleanor Vance</div>
+              <div class="chip-desc">Full Access & User Management</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN APPLICATION VIEW (Visible when authenticated) ==================== -->
+  <div id="appView" style="display: none;">
+    <!-- Top Global Bar -->
+    <header class="top-nav">
+      <div class="nav-brand">
+        <div class="brand-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">Compliant Records</div>
+          <div class="brand-sub">21 CFR Part 11 Electronic Batch Records & Audit Trail</div>
+        </div>
+      </div>
+
+      <div class="user-session-bar">
+        <div class="user-session" id="userSession"></div>
+        <button class="btn btn-sm btn-logout" onclick="handleLogout()" title="Sign out of this account">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </div>
+    </header>
+
+    <!-- Compliance Banner -->
+    <div class="compliance-banner">
+      <div class="banner-content">
+        <span class="badge-pill">ALCOA+ Compliant</span>
+        <span id="roleContextBanner"><strong>Data Integrity Controls Active:</strong> System-generated timestamped audit trails (§11.10(e)), electronic signature re-authentication (§11.200), and immutable record locking (§11.10(a)).</span>
+      </div>
+      <button class="btn-text" onclick="openComplianceModal()">View 21 CFR Part 11 Mapping</button>
+    </div>
+
+    <!-- Main Container -->
+    <main class="main-container">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <nav class="side-nav">
+          <button class="nav-item active" data-tab="records" onclick="switchTab('records')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Batch Records
+          </button>
+          <button class="nav-item" data-tab="audit" onclick="switchTab('audit')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Audit Trail Explorer
+          </button>
+          <button class="nav-item" data-tab="users" id="navTabUsers" onclick="switchTab('users')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            User Management
+          </button>
+          <button class="nav-item" data-tab="qa-plan" onclick="switchTab('qa-plan')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            QA Validation Matrix
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="card-sm">
+            <div class="card-sm-title">Active Role & Permissions</div>
+            <div id="sidebarRoleDescription" class="card-sm-text">...</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Tab 1: Batch Records -->
+      <section class="content-panel active" id="tab-records">
+        <div class="panel-header">
+          <div>
+            <h2>Electronic Batch Records</h2>
+            <p class="subtitle">Originate, edit, or formally sign manufacturing & QC batch records.</p>
+          </div>
+          <div class="panel-actions">
+            <button class="btn btn-primary" id="btnNewRecord" onclick="openNewRecordModal()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Create Batch Record
+            </button>
+          </div>
+        </div>
+
+        <div class="records-split-layout">
+          <div class="records-list-pane">
+            <div class="filter-bar">
+              <input type="text" id="recordSearch" placeholder="Search batch records..." oninput="filterRecordList()" />
+              <select id="statusFilter" onchange="filterRecordList()">
+                <option value="all">All Statuses</option>
+                <option value="draft">Draft (Unlocked)</option>
+                <option value="locked">Locked (Signed)</option>
+              </select>
+            </div>
+            <div class="records-list" id="recordsListContainer"></div>
+          </div>
+
+          <div class="record-detail-pane" id="recordDetailPane">
+            <div class="empty-state">
+              <p>Select a batch record from the list to inspect content, audit trail, and electronic signatures.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Audit Trail Explorer -->
+      <section class="content-panel" id="tab-audit">
+        <div class="panel-header">
+          <div>
+            <h2>System-Wide Audit Trail Explorer</h2>
+            <p class="subtitle">Complete, contemporaneous, append-only transaction history (21 CFR §11.10(e)).</p>
+          </div>
+          <div class="panel-actions">
+            <button class="btn btn-outline" onclick="loadGlobalAuditTrail()">Refresh Audit Log</button>
+          </div>
+        </div>
+
+        <div class="filter-strip" style="display:flex; gap:1rem; margin-bottom:1rem;">
+          <div>
+            <label style="font-size:0.8rem; font-weight:600;">Filter Action:</label>
+            <select id="auditActionFilter" onchange="loadGlobalAuditTrail()" style="padding:0.4rem; border-radius:4px; border:1px solid #ccc;">
+              <option value="">All Actions</option>
+              <option value="create">Create</option>
+              <option value="update">Update</option>
+              <option value="sign">Sign</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.8rem; font-weight:600;">User Email:</label>
+            <input type="text" id="auditUserFilter" placeholder="Filter by email..." oninput="loadGlobalAuditTrail()" style="padding:0.4rem; border-radius:4px; border:1px solid #ccc;" />
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Timestamp (UTC)</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Record</th>
+                <th>Field Changed</th>
+                <th>Old Value</th>
+                <th>New Value</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tab 3: User Management (Admin Only) -->
+      <section class="content-panel" id="tab-users">
+        <div class="panel-header">
+          <div>
+            <h2>User & Role Management</h2>
+            <p class="subtitle">Role-Based Access Control (RBAC) administration (21 CFR §11.10(g)).</p>
+          </div>
+          <div class="panel-actions" id="userManagementActions">
+            <button class="btn btn-primary" onclick="openNewUserModal()">Add New User</button>
+          </div>
+        </div>
+
+        <div id="usersRestrictedNotice" class="restricted-notice" style="display: none;">
+          <div class="alert alert-warning">
+            <strong>Access Denied (403 Forbidden):</strong> User management is strictly restricted to Administrators (FR-12). You are currently logged in with a non-admin role. Log out and sign in as <strong>Dr. Eleanor Vance (Admin)</strong> to manage users.
+          </div>
+        </div>
+
+        <div id="usersContent">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Full Name</th>
+                  <th>Email Address</th>
+                  <th>Role</th>
+                  <th>Permissions Summary</th>
+                  <th>Date Created</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 4: QA Validation Matrix & Test Scenarios -->
+      <section class="content-panel" id="tab-qa-plan">
+        <div class="panel-header">
+          <div>
+            <h2>QA Validation & Traceability Matrix</h2>
+            <p class="subtitle">Traceability Matrix linking 21 CFR Part 11 PRD Requirements to 10 Test Scenarios.</p>
+          </div>
+          <div>
+            <span class="badge-status badge-locked">Automated Suite: 10 / 10 Passing</span>
+          </div>
+        </div>
+
+        <div class="qa-grid">
+          <div class="qa-card passed">
+            <div class="qa-card-header"><span class="badge-scenario">TC-01</span><span class="badge-pass">PASS</span></div>
+            <div class="qa-title">Valid Login for Each Role</div>
+            <p class="qa-desc">Verifies JWT token issuance and proper role assignment (Admin, Reviewer, Operator).</p>
+            <div class="qa-tag">FR-1 | §11.200</div>
+          </div>
+          <div class="qa-card passed">
+            <div class="qa-card-header"><span class="badge-scenario">TC-02</span><span class="badge-pass">PASS</span></div>
+            <div class="qa-title">Invalid Login Defense</div>
+            <p class="qa-desc">Invalid password or email returns a generic 401 message without user enumeration.</p>
+            <div class="qa-tag">FR-2 | Security Control</div>
+          </div>
+          <div class="qa-card passed">
+            <div class="qa-card-header"><span class="badge-scenario">TC-03</span><span class="badge-pass">PASS</span></div>
+            <div class="qa-title">Operator Record Creation</div>
+            <p class="qa-desc">Operator originates batch record in 'draft' status; write is logged in audit trail.</p>
+            <div class="qa-tag">FR-3, FR-6 | §11.10(e)</div>
+          </div>
+          <div class="qa-card passed">
+            <div class="qa-card-header"><span class="badge-scenario">TC-04</span><span class="badge-pass">PASS</span></div>
+            <div class="qa-title">Operator Record Modification</div>
+            <p class="qa-desc">Editing draft record captures field-level old and new values in the append-only audit log.</p>
+            <div class="qa-tag">FR-4, FR-6 | ALCOA+ Accurate</div>
+          </div>
+          <div class="qa-card passed">
+            <div class="qa-card-header"><span class="badge-scenario">TC-05</span><span class="badge-pass">PASS</span></div>
+            <div class="qa-title">Non-Operator Creation Block</div>
+            <p class="qa-desc">Reviewers attempting to create batch records are rejected with 403 Forbidden.</p>
+            <div class="qa-tag">FR-3 | RBAC Segregation</div>
+          </div>
+          <div class="qa-card passed">
+            <div class="qa-card-header"><span class="badge-scenario">TC-06</span><span class="badge-pass">PASS</span></div>
+            <div class="qa-title">Electronic Signature & Locking</div>
+            <p class="qa-desc">Reviewer signs record with verified password, changing status to immutable 'locked'.</p>
+            <div class="qa-tag">FR-8, FR-10 | §11.50, §11.10(a)</div>
+          </div>
+          <div class="qa-card passed">
+            <div class="qa-card-header"><span class="badge-scenario">TC-07</span><span class="badge-pass">PASS</span></div>
+            <div class="qa-title">Failed Signature Re-Authentication</div>
+            <p class="qa-desc">Incorrect password re-entry aborts signature. Record remains draft and unlocked.</p>
+            <div class="qa-tag">FR-9 | §11.200(a)(1)</div>
+          </div>
+          <div class="qa-card passed">
+            <div class="qa-card-header"><span class="badge-scenario">TC-08</span><span class="badge-pass">PASS</span></div>
+            <div class="qa-title">Locked Record Immutability</div>
+            <p class="qa-desc">Any attempt to edit a locked record (including by Admin or Operator) is rejected (403).</p>
+            <div class="qa-tag">FR-11 | Data Integrity Immutability</div>
+          </div>
+          <div class="qa-card passed">
+            <div class="qa-card-header"><span class="badge-scenario">TC-09</span><span class="badge-pass">PASS</span></div>
+            <div class="qa-title">Admin User Provisioning</div>
+            <p class="qa-desc">Admin creates new users with role-specific permissions and bcrypt password hashing.</p>
+            <div class="qa-tag">FR-12 | Admin Control</div>
+          </div>
+          <div class="qa-card passed">
+            <div class="qa-card-header"><span class="badge-scenario">TC-10</span><span class="badge-pass">PASS</span></div>
+            <div class="qa-title">Non-Admin Access Denial</div>
+            <p class="qa-desc">Operators and Reviewers attempting to list or provision users receive 403 Forbidden.</p>
+            <div class="qa-tag">FR-12 | RBAC Security</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <div class="modal-backdrop" id="signatureModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>21 CFR Part 11 Electronic Signature</h3>
+        <button class="modal-close" onclick="closeModal('signatureModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <strong>Non-Repudiation Notice:</strong> Executing your electronic signature is legally equivalent to your handwritten signature. It permanently locks this record against any further changes.
+        </div>
+        <form id="signForm" onsubmit="handleSignatureSubmit(event)">
+          <div class="form-group">
+            <label>Signer Identity:</label>
+            <input type="text" id="signerInfoDisplay" readonly disabled style="background:#f1f5f9;" />
+          </div>
+          <div class="form-group">
+            <label for="signatureMeaning">Signature Meaning / Purpose <span class="required">*</span>:</label>
+            <select id="signatureMeaning" required>
+              <option value="Approved">Approved (Batch release authorization)</option>
+              <option value="Reviewed">Reviewed (Technical process verification)</option>
+              <option value="Rejected">Rejected (Failed acceptance criteria)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="signaturePassword">Re-enter Password to Authenticate <span class="required">*</span>:</label>
+            <input type="password" id="signaturePassword" placeholder="Enter your current password..." required />
+            <small class="form-hint">Mandated under 21 CFR §11.200 (Identity re-verification).</small>
+          </div>
+          <div id="signError" class="form-error" style="display: none;"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('signatureModal')">Cancel</button>
+            <button type="submit" class="btn btn-danger">Execute Electronic Signature</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="newRecordModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Originate Batch Record</h3>
+        <button class="modal-close" onclick="closeModal('newRecordModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="newRecordForm" onsubmit="handleNewRecordSubmit(event)">
+          <div class="form-group">
+            <label for="newRecordTitle">Batch Record Title <span class="required">*</span>:</label>
+            <input type="text" id="newRecordTitle" placeholder="e.g. Batch Record #BR-2026-102: Buffer Compounding" required />
+          </div>
+          <div class="form-group">
+            <label for="newRecordContent">Process Parameters & Batch Notes <span class="required">*</span>:</label>
+            <textarea id="newRecordContent" rows="5" placeholder="Enter critical process parameters (CPPs), equipment IDs, compounding steps..." required></textarea>
+          </div>
+          <div id="newRecordError" class="form-error" style="display: none;"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('newRecordModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Originate Record (Draft)</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="editRecordModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Edit Batch Record</h3>
+        <button class="modal-close" onclick="closeModal('editRecordModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <strong>Audit Trail Notice:</strong> Every modification to title or content is automatically recorded in the append-only audit trail with your identity, timestamp, old value, and new value.
+        </div>
+        <form id="editRecordForm" onsubmit="handleEditRecordSubmit(event)">
+          <input type="hidden" id="editRecordId" />
+          <div class="form-group">
+            <label for="editRecordTitle">Batch Record Title:</label>
+            <input type="text" id="editRecordTitle" required />
+          </div>
+          <div class="form-group">
+            <label for="editRecordContent">Record Content:</label>
+            <textarea id="editRecordContent" rows="5" required></textarea>
+          </div>
+          <div id="editRecordError" class="form-error" style="display: none;"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('editRecordModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes & Audit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="newUserModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Provision New User</h3>
+        <button class="modal-close" onclick="closeModal('newUserModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="newUserForm" onsubmit="handleNewUserSubmit(event)">
+          <div class="form-group">
+            <label for="newUserName">Full Name <span class="required">*</span>:</label>
+            <input type="text" id="newUserName" placeholder="e.g. Dr. Jane Doe" required />
+          </div>
+          <div class="form-group">
+            <label for="newUserEmail">Email Address <span class="required">*</span>:</label>
+            <input type="email" id="newUserEmail" placeholder="e.g. jane.doe@pharma.local" required />
+          </div>
+          <div class="form-group">
+            <label for="newUserPassword">Initial Password <span class="required">*</span>:</label>
+            <input type="password" id="newUserPassword" placeholder="Minimum 8 characters" required />
+          </div>
+          <div class="form-group">
+            <label for="newUserRole">Assigned Role <span class="required">*</span>:</label>
+            <select id="newUserRole" required>
+              <option value="operator">Operator (Create & Edit Draft Records)</option>
+              <option value="reviewer">Reviewer (Sign & Approve Records)</option>
+              <option value="admin">Admin (Full System & User Management)</option>
+            </select>
+          </div>
+          <div id="newUserError" class="form-error" style="display: none;"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('newUserModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="complianceModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>21 CFR Part 11 & GAMP 5 Regulatory Mapping</h3>
+        <button class="modal-close" onclick="closeModal('complianceModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="compliance-grid">
+          <div class="cfr-item">
+            <div class="cfr-ref">21 CFR §11.10(a)</div>
+            <h4>System Validation & Immutability</h4>
+            <p>Records are permanently locked upon signature; subsequent modifications are strictly rejected across all roles.</p>
+          </div>
+          <div class="cfr-item">
+            <div class="cfr-ref">21 CFR §11.10(e)</div>
+            <h4>Secure, Time-Stamped Audit Trails</h4>
+            <p>Append-only table capturing user, action, field changed, old value, new value, and timestamp. No edit or delete routes exist.</p>
+          </div>
+          <div class="cfr-item">
+            <div class="cfr-ref">21 CFR §11.10(g) & (d)</div>
+            <h4>Authority Checks & RBAC</h4>
+            <p>Segregation of duties: Operators create/edit; Reviewers sign; Admins manage users.</p>
+          </div>
+          <div class="cfr-item">
+            <div class="cfr-ref">21 CFR §11.50</div>
+            <h4>Signature Manifestations</h4>
+            <p>Signed electronic records clearly display signer name, role, date/time, and meaning (Reviewed, Approved, Rejected).</p>
+          </div>
+          <div class="cfr-item">
+            <div class="cfr-ref">21 CFR §11.200</div>
+            <h4>Signature Components & Controls</h4>
+            <p>Re-authenticates password against bcrypt hash before recording electronic signature.</p>
+          </div>
+          <div class="cfr-item">
+            <div class="cfr-ref">ALCOA+ Principles</div>
+            <h4>Data Integrity Standard</h4>
+            <p>Attributable, Legible, Contemporaneous, Original, and Accurate with complete delta audit records.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="closeModal('complianceModal')">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

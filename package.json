@@ -1,0 +1,28 @@
+{
+  "name": "compliant-records",
+  "version": "1.0.0",
+  "description": "21 CFR Part 11 Compliant Electronic Records & Audit Trail System",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node src/seed.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "21-cfr-part-11",
+    "audit-trail",
+    "electronic-signatures",
+    "gamp-5",
+    "software-validation",
+    "qa",
+    "rbac"
+  ],
+  "author": "Dhruv Mehta",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3"
+  }
+}
